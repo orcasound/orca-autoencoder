@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from my_classes_1 import ptDataset
-import my_classes_1
+from ae_classes_1 import ptDataset
+import ae_classes_1
 import numpy as np
 import pickle
 import time
@@ -82,7 +82,7 @@ saveModelFilename = "models/model_AE_4_{}_12_30_9_29.pkl".format(tot_epochs + ma
 specPklDir = "inputs/"
 # Datasets
 
-training_generator, validation_generator, rows, cols  = my_classes_1.setupOrcaDatasets(device, params, validation_fraction, specPklDir)
+training_generator, validation_generator, rows, cols  = ae_classes_1.setupOrcaDatasets(device, params, validation_fraction, specPklDir)
 # Generators are in my_classes.py
 print("generators have ", rows, " and ", cols, "cols")
 
@@ -99,7 +99,7 @@ if loadModelFilename != "":
 ##    model.train()
 
 else:
-    model = my_classes_1.AE_4(input_shape=rows * cols).to(device)
+    model = ae_classes_1.AE_4(input_shape=rows * cols).to(device)
     print("new model is ", model)
 # create an optimizer object
 # Adam optimizer with learning rate 1e-3
