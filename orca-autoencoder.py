@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from my_classes_1 import myDataset
+from my_classes_1 import ptDataset
 import my_classes_1
 import numpy as np
 import pickle

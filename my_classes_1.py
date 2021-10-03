@@ -10,11 +10,11 @@ import os
 import pickle
 import math
 
-class myDataset(torch.utils.data.Dataset):
+class ptDataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
   def __init__(self, device, dataArys, lblAry):
         'Initialization'
-        super(myDataset, self).__init__()
+        super(ptDataset, self).__init__()
 
         self.array_data = torch.tensor(dataArys, dtype=torch.float32).to(device)
         self.label_data = torch.tensor(lblAry, dtype=torch.long).to(device)
@@ -90,11 +90,11 @@ def setupOrcaDatasets(device, params, validFrac, specPklDir):
   specs_valid = torch.tensor(np.array(specs_valid), dtype=torch.float32).to(device)
   specs_train = torch.tensor(np.array(specs_train), dtype=torch.float32).to(device)
 
-  training_data = myDataset(device, specs_train, lbls_train)
+  training_data = ptDataset(device, specs_train, lbls_train)
   training_generator = torch.utils.data.DataLoader(
     training_data, batch_size=params['batch_size'], shuffle=params['shuffle']
   )
-  validation_data = myDataset(device, specs_valid, lbls_valid)
+  validation_data = ptDataset(device, specs_valid, lbls_valid)
   validation_generator = torch.utils.data.DataLoader(
     validation_data, batch_size=params['batch_size'], shuffle=params['shuffle']
   )
