@@ -53,7 +53,7 @@ def doValidation(jpgFilename):
             ax = plt.subplot(2, number, index + 1)
             themin = 0  # np.min(test_examples[index])
             plt.imshow(test_examples[index].detach().cpu().numpy().reshape(rows, cols) + themin + 0.01)
-            plt.gray()
+            #plt.gray()
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
 
@@ -61,7 +61,7 @@ def doValidation(jpgFilename):
             ax = plt.subplot(2, number, index + 1 + number)
             themin = 0  # np.min(reconstruction[index])
             plt.imshow(reconstruction[index].detach().cpu().numpy().reshape(rows, cols) + themin + 0.01)
-            plt.gray()
+            #plt.gray()
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
 
@@ -74,12 +74,12 @@ params = {'batch_size': 256,
           'shuffle': True,
           'num_workers': 6}
 validation_fraction = 0.1
-tot_epochs = 18350
+tot_epochs = 0
 max_epochs = 5000
 learning_rate = 0.001
-loadModelFilename = "models/model_AE_4_{}_12_30_9_29.pkl".format(tot_epochs) 
-saveModelFilename = "models/model_AE_4_{}_12_30_9_29.pkl".format(tot_epochs + max_epochs)
-specPklDir = "inputs/"
+loadModelFilename = "" ### "../../models/model_AE_4_{}_12_30_9_29.pkl".format(tot_epochs)
+saveModelFilename = "../../models/model_AE_4_{}_10_03.pkl".format(tot_epochs + max_epochs)
+specPklDir = "../../spectrograms/"
 # Datasets
 
 training_generator, validation_generator, rows, cols  = ae_classes_1.setupOrcaDatasets(device, params, validation_fraction, specPklDir)
@@ -157,9 +157,16 @@ for epoch in range(max_epochs):
     if epoch % 10 == 0:
         print("cnts: {} {}, epoch : {}/{}, recon loss = {:.8f}, {:.4f}".format(cnt, totalCnt, epoch + 1, max_epochs, loss, math.log10(loss)))
     totalCnt += cnt
+    if epoch % 1000 == 0:
+        saveModelFilename = "../../models/model_AE_4_{}_10_03.pkl".format(tot_epochs + epoch)
+        saveModel(model, saveModelFilename)
+        tstop = time.time()
+        print("Elapsed time (s, m) is ", int(tstop - tstart), int((tstop - tstart) / 60.0), saveModelFilename)
+saveModelFilename = "../../models/model_AE_4_{}_10_03.pkl".format(tot_epochs + epoch)
 saveModel(model, saveModelFilename)
 print(model)
 model.eval()
 doValidation('outputs/plots/testPost_{}_epochs.jpg'.format(tot_epochs + epoch))
 tstop = time.time()
-print("Elapsed time (s, m) is ", tstop - tstart, (tstop - tstart)/60.0)
+print("Elapsed time (s, m) is ", int(tstop - tstart), int((tstop - tstart) / 60.0), saveModelFilename)
+
