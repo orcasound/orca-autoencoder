@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision   #  for MNIST datasets
+#import torchvision   #  for MNIST datasets
 import helpers_3D as d3
 from random import random
 import numpy as np
@@ -108,9 +108,9 @@ def setupOrcaDatasets(device, params, validFrac, specPklDir):
 
 
 
-class AE_4(nn.Module):
+class MLP_4(nn.Module):
   def __init__(self, **kwargs):
-    super(AE_4, self).__init__()
+    super(MLP_4, self).__init__()
 
     # Encoder
     self.enc1 = nn.Linear(in_features=kwargs["input_shape"], out_features=512)  # Input image (28*28 = 784)
@@ -144,9 +144,9 @@ class AE_4(nn.Module):
 
     return x
 
-class AE_3(nn.Module):
+class MLP_3(nn.Module):
   def __init__(self, **kwargs):
-    super(AE_3, self).__init__()
+    super(MLP_3, self).__init__()
 
     # Encoder
     self.enc1 = nn.Linear(in_features=kwargs["input_shape"], out_features=512)  # Input image (28*28 = 784)
@@ -180,9 +180,9 @@ class AE_3(nn.Module):
 
     return x
 
-class AE_2(nn.Module):
+class MLP_2(nn.Module):
   def __init__(self, **kwargs):
-    super(AE_2, self).__init__()
+    super(MLP_2, self).__init__()
 
     # Encoder
     self.enc1 = nn.Linear(in_features=kwargs["input_shape"], out_features=256)  # Input image (28*28 = 784)
