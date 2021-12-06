@@ -1,7 +1,5 @@
 import helpers_3D as d3
-
 import time
-
 
 from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import Conv2D, Conv2DTranspose
@@ -25,7 +23,6 @@ def encoderAE(inputs, layers):
         x = BatchNormalization()(x)
         x = ReLU()(x)
     return x
-
 
 def decoderAE(x, layers):
     """ Construct the Decoder
@@ -55,31 +52,21 @@ def countCases(dataset, data, annot):
 #####################################################  RUN RUN RUN
 
 
-baseDir = "/tmp/data/"             #  actually: /media/val/Seagate Portable Drive/AE_256/
-baseDir = "/media/val/Seagate Portable Drive/AE_256/"
+
 #######################  User set parameters VVVVVVVVVVVVVVV below
 
 loadAE_ModelFilename = ""
-thisdate = '12_05'
-newModelID = 'AE_data_12_04_2021_256'
-init_epochs = 0  # NOT IN USE YET
+
+h5filename = 'Tinydb_h5_256_256__09_12_2021_wavs.h5'
+
+#saveAE_ModelDir = baseDir + "models_256/{}_epochs_{}/".format(newModelID, addnl_epochs)
+#saveEncoder_ModelDir = baseDir + "models_256/Encoder_{}/".format(newModelID)
+
 addnl_epochs = 10
-
-spectrogramsDir = baseDir + "AE_256_input/dbs/"
-h5filename = 'TINYdb_h5_256_256__09_12_2021_wavs.h5'
-
-saveAE_ModelDir = baseDir + "models_256/{}_epochs_{}/".format(newModelID, addnl_epochs)
-saveEncoder_ModelDir = baseDir + "models_256/Encoder_{}/".format(newModelID)
-
-jpgDir = baseDir + "AE_256_output/AE_jpgs_{}/".format(newModelID)
-
 #######################  User set parameters ^^^^^^^^^^^^^^^^^^^  above
 
-d3.makeDir(saveAE_ModelDir)
-d3.makeDir(saveEncoder_ModelDir)
-d3.makeDir(jpgDir)
 
-h5file = dbi.open_file(spectrogramsDir + h5filename, 'r')
+h5file = dbi.open_file(h5filename, 'r')
 train_data = dbi.open_table(h5file, "/train/table_data")
 train_annot = dbi.open_table(h5file, "/train/table_annot")
 val_data = dbi.open_table(h5file, "/eval/table_data")
@@ -88,9 +75,9 @@ test_data = dbi.open_table(h5file, "/test/table_data")
 test_annot = dbi.open_table(h5file, "/test/table_annot")
 
 ############## THIS LOADS ENTIRE h5 DATASET ####   SLOW!!!!
-# countCases('train', train_data, train_annot)
-# countCases('val', val_data, val_annot)
-# countCases('test', test_data, test_annot)
+countCases('train', train_data, train_annot)
+countCases('val', val_data, val_annot)
+countCases('test', test_data, test_annot)
 
 #Create a BatchGenerator from a data_table and separate annotations in a anot_table
 train_generator = BatchGenerator(data_table=train_data, annot_in_data_table=False, annot_table=train_annot,\
@@ -140,9 +127,9 @@ tstart = time.time()
     # and eventually execute a train_loop(n_epochs = A_Nice_Number)
 
 ###  Done running model
-print("save aeAE_Model {} at directory {}".format(newModelID, saveAE_ModelDir))
-aeAE_Model.save(saveAE_ModelDir)
-encoder_Model.save(saveEncoder_ModelDir)
+# print("save aeAE_Model {} at directory {}".format(newModelID, saveAE_ModelDir))
+# aeAE_Model.save(saveAE_ModelDir)
+# encoder_Model.save(saveEncoder_ModelDir)
 
 
 tstop = time.time()
