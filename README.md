@@ -15,9 +15,10 @@ My toplevel directory on my **local machine** is titled 'github'
     -----------------
     |       |       |
    MLP     CNN   analyzers	
-    |
+    |       |
 orca-autoencoder_MLP.py
-```
+```         |
+       AE_train_256_256.py
   
   The python scripts are maintained under github in the `orca-autoencoder-codes` sub-directory.
   
@@ -31,6 +32,7 @@ orca-autoencoder_MLP.py
   * various scripts create jpg files and these are stored in the `jpgs` sub-directry.
   
   **orca-autoencoder_MLP.py** is a fully connected multilayer perceptron network
+  **AE_train_256_256.py is BECOMING a ketos style CNN
   
    
   
