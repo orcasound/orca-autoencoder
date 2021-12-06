@@ -32,7 +32,7 @@ orca-autoencoder_MLP.py
   * various scripts create jpg files and these are stored in the `jpgs` sub-directry.
   
   **orca-autoencoder_MLP.py** is a fully connected multilayer perceptron network
-  **AE_train_256_256.py is BECOMING a ketos style CNN
+  **AE_train_256_256.py is BECOMING a ketos style CNN -- no model defined
   
    
   
