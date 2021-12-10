@@ -1,0 +1,10 @@
+numpy
+matplotlib
+ketos
+scipy
+torch
+soundfile
+sounddevice
+pandas
+pickle5
+librosa
