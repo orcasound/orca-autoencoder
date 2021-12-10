@@ -1,6 +1,6 @@
 # Notes on docker usage to get 'known' python libraries and gpu access
 
-# python version must be 3.6 or 3.7 for Ketos but 3.8 for database_interface.py
+# python version must be 3.6 or 3.7 for Ketos but maybe 3.8 for database_interface.py
 	sudo add-apt-repository ppa:deadsnakes/ppa
 	sudo apt-get update
 	sudo apt-get install python3.8
