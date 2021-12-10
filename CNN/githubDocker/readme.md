@@ -30,7 +30,7 @@ cd /tmp/code   #for python programs
 	python theNNpythonfile.py
 	
 
-# some randomn dock3r commands
+# some randomn docker commands
 
 docker container ls
 docker container ls -a
