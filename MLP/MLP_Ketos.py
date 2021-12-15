@@ -11,12 +11,12 @@ import pandas as pd
 import ketos.data_handling.database_interface as dbi
 import ketos
 from random import random
-
+import os
 from ketos.neural_networks.dev_utils import  nn_interface   # RecipeCompat,
 ##################################
 #################################
 outputDir = "dbs/"            # this is a directory for the checkpoints
-
+os.mkdir(outputDir)
 ########################  h5 database
 def buildH5database(X_train, Y_train, X_test, Y_test, testFraction):
     h5filename = 'mnist.h5'
@@ -50,7 +50,8 @@ class MLP(Model):
         output = self.dense(inputs)
         output = self.dense(output)
         output = self.final_node(output)
-
+        return output
+    
 class MLPInterface(NNInterface):
     def __init__(self, n_neurons, activation, optimizer, loss_function, metrics):
         super(MLPInterface, self).__init__(optimizer, loss_function, metrics)
