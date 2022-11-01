@@ -6,26 +6,66 @@ import math
 from random import random
 import numpy as np
 import copy
-# from tensorflow import keras
-# import tensorflow as tf
-# from tensorflow.keras import Model, Input
-# from tensorflow.keras.layers import Conv2D, Conv2DTranspose
-# from tensorflow.keras.layers import ReLU, BatchNormalization
-# from tensorflow.keras.callbacks import ModelCheckpoint
-# from tensorflow.keras import layers
-
+from tensorflow import keras
+import tensorflow as tf
+from tensorflow.keras import Model, Input
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose
+from tensorflow.keras.layers import ReLU, BatchNormalization
+from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras import layers
+import datetime
 import pickle
 ###################################################  for WAV processing
 metadata = {}
 metadata['Tspec'] = 3
-metadata['DeltaT'] = 1
+metadata['DeltaT'] = 1   # secs to advance each spectrogram
 metadata['Ntimes'] = 256
 metadata['Nfreqs'] = 255    # this MUST be one smaller than desired number of freq values
 metadata['f_low'] = 300     #    as the total power is pushed into the bottom making 128
 metadata['f_high'] = 10000
 metadata['Nfft'] = 512
 metadata['logscale'] = False
+metadata['lr'] = 0.001
 DEBUG = 0
+
+class AE_6(Model):
+  def __init__(self):
+    super(AE_6, self).__init__()
+    self.encoder = tf.keras.Sequential([
+      layers.Input(shape=(metadata['Ntimes'], metadata['Nfreqs']+1, 1)),
+      layers.Conv2D(64, (3, 3), activation='relu', padding='same', strides=2),
+      layers.Conv2D(32, (3, 3), activation='relu', padding='same', strides=2),
+      layers.Conv2D(16, (3, 3), activation='relu', padding='same', strides=2),
+      layers.Conv2D(8, (3, 3), activation='relu', padding='same', strides=2)])
+
+    self.decoder = tf.keras.Sequential([
+      layers.Input(shape=(16, 16, 8)),
+      layers.Conv2DTranspose(8, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(16, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(32, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(64, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(1, kernel_size=(3, 3), activation='sigmoid', padding='same')])
+
+  def call(self, x):
+    encoded = self.encoder(x)
+    decoded = self.decoder(encoded)
+    return decoded
+
+
+def rounded_accuracy(y_true, y_pred):
+    return keras.metrics.binary_accuracy(tf.round(y_true), tf.round(y_pred))
+
+def decodeWAVdatetimeFilename(file):
+    items = file.split('_')
+    site = items[0]
+    mo = int(items[1])
+    dy = int(items[2])
+    yr = int(items[3])
+    hr = int(items[4])
+    mn = int(items[5])
+    sc = int(items[6])
+    x = datetime.datetime(yr, mo, dy, hr, mn, sc)
+    return x
 
 def checkDir(theDir):  # make sure directory has a / at the end
     items = theDir.split('/')
@@ -41,6 +81,19 @@ def makeDir(thisdir):
         print('-------------Already have ', thisdir)
         return thisdir
 
+def getTxts(dir):
+    filelist = []
+    try:
+        os.chdir(dir)
+        # get list of the wav or WAV files
+        filelist = [f for f in os.listdir('.') if
+                       any(f.endswith(ext) for ext in ['TXT', 'txt'])]  # os.listdir()  # get list of the txt files
+        filelist.sort()
+    except:
+        print("failed to load files from dir ", dir)
+        exit()
+    return filelist
+
 def getWavs(wavDir):
     wavfilelist = []
     try:
@@ -53,6 +106,44 @@ def getWavs(wavDir):
         print("failed to load wavs from dir ", wavDir)
         exit()
     return wavfilelist
+
+def evaluateClassifier(predictions, labels):
+    FP = 0
+    TP = 0
+    FN = 0
+    TN = 0
+    predLbls = []
+    labeled_1Cnt = 0
+    labeled_0Cnt = 0
+    unlabeledCnt = 0
+    for i in range(len(predictions)):
+        if predictions[i][0] > 0.75:
+            labeled_1Cnt += 1
+            predLbls.append(1)
+        else:
+            if predictions[i][0] < 0.25:
+                labeled_0Cnt += 1
+                predLbls.append(0)
+            else:
+                unlabeledCnt += 1
+                predLbls.append(-1)
+        if predLbls[-1] == 1:
+            if labels[i] == 1:
+                TP += 1
+            else:
+                if labels[i] == 0:
+                    FN += 1
+        if predLbls[-1] == 0:
+            if labels[i] == 0:
+                TN += 1
+            else:
+                if labels[i] == 1:
+                    FP += 1
+    recall = TP / (TP + TN)
+    precision = TP / (TP + FP)
+    print("predictions: Unlabelable {}  Calls {} Not a call {}".format(unlabeledCnt, labeled_1Cnt, labeled_0Cnt))
+    return TP, FP, FN, TN, precision, recall
+
 def compressPsdSliceLog(freqs, psds, flow, fhigh, nbands, doLogs):
     compressedSlice = np.zeros(nbands + 1)  # totPwr in [0] and frequency of bands is flow -> fhigh in nBands steps
     #    print("Num freqs", len(freqs))
@@ -174,8 +265,8 @@ def printConfusionMatrix(kerasModel, datagroup, x_data, y_data):
     print('   Label = 0      TN {:0.3f}    FN {:0.3f}'.format(confMatrix[0,0], confMatrix[0,1]))
     print('   Label = 1      FP {:0.3f}    TP {:0.3f}'.format(confMatrix[1,0], confMatrix[1,1]))
     print("Precision is {:0.3f}   Recall is {:0.3f}".format(precision, recall))
-    print("Precision = frac of + predictions that are correct.")
-    print("Recall    = frac of actual + that are predicted.\n")
+    print("Precision = frac of call predictions that are correct.")
+    print("Recall    = frac of actual calls that are predicted.\n")
 
 
 def drawline(istart, jstart,ary, theta):
@@ -253,27 +344,20 @@ def show_reconstructions(model, images, img_path, filename, n_images=5, tight_la
     plt.savefig(path, format=fig_extension, dpi=resolution)  
 
 def show_reconstructionsSept(model, images, img_path, filename, n_images=5, tight_layout=True, fig_extension="png", resolution=300):
-    print("::::::::::::::", images[0])
-    img = []
-    for i in range(n_images):
-        print(type(images))
 
-#        img.append(itm[0])
+    print("in helpers show_reconstruction inputs ", n_images, filename)
 
-    print("helpers show_reconstruction inputs ",img[0], "\n", n_images, filename)
-    input("[[[[[[[[[[[")
-    reconstructions = model.predict(img)  # grab first element, the ary
+    reconstructions = model.predict(images)  # grab first element, the ary
     print("\n--------------------------------got reconstructions")
-    input(";;;;;;;;;;;;;;;;;;;;;")
     fig = plt.figure(figsize=(n_images * 1.5, 3))
     plt.title(filename)
     for image_index in range(n_images):
         plt.subplot(2, n_images, 1 + image_index)
-        plot_image(img[image_index])
+        plot_image(images[image_index])
         plt.subplot(2, n_images, 1 + n_images + image_index)
         plot_image(reconstructions[image_index])
     path = os.path.join(img_path, filename + "." + fig_extension)
-    print("Saving figure", filename)
+    print("Saving figure", path)
     if tight_layout:
         plt.tight_layout()
     plt.savefig(path, format=fig_extension, dpi=resolution)  
@@ -293,7 +377,7 @@ def show_history(model, history, N, score, totEpochs, img_path, filename):
     plt.title(title)
     plt.ylabel('amount')
     plt.xlabel('epoch')
-    plt.legend([keylist[0], keylist[1]], loc='upper left')
+    plt.legend([keylist[0], keylist[1],keylist[2],keylist[3]], loc='upper left')
     plt.savefig(img_path + filename)  
     plt.close() 
 
