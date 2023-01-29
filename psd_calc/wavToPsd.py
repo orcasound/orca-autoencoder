@@ -83,10 +83,10 @@ def getSamples(startsecs, Nsamples, WAV):
                     npsamples = npdata
                 else:
                     npsamples = np.append(npsamples, npdata)
-            totalSecs = f.seek(0, sf.SEEK_END) / f.samplerate
+            totalSecsInFile = f.seek(0, sf.SEEK_END) / f.samplerate
             f.close()
     #    print("n samples", len(npsamples))
-    return npsamples, totalSecs
+    return npsamples, totalSecsInFile
 
 def setupFreqBands(flow, fhigh, nbands, doLogs):
     df = (fhigh - flow) / nbands
@@ -163,7 +163,7 @@ def calculatePSD(wavFile, startSecs, Nsamples, flow, fhigh, nbands, Nfft, doLogs
     ax1.set_title("Time series {} window".format(fftWindow))
     ax2.plot(f_values, np.log10(psd),marker='o')
     ax2.set_title("log10(PSD", fontsize = 9)
-    ax3.plot(fbands, np.log10(psdCompressed),marker='o')
+    ax3.plot(fbands[1:], np.log10(psdCompressed[1:]),marker='o')  # Don't graph the DC broadband level
     ax3.set_title(title)
     # using padding
     fig.tight_layout(pad=1.0)
@@ -174,14 +174,15 @@ def calculatePSD(wavFile, startSecs, Nsamples, flow, fhigh, nbands, Nfft, doLogs
 
 ################################################################  RUN STARTS HERE
 
-wavDir = "/home/val/PycharmProjects_Original/AEproject/wavFiles/"
-thisWav = "DTMF.wav"
+wavDir = "/home/val/PycharmProjects/orca-autoencoder/psd_calc/"
+wavDir = ""
+thisWav = "someCalls.wav"
 
 with sf.SoundFile(wavDir+thisWav) as f:
     samplerate = f.samplerate
 flow = 10
 fhigh = samplerate/2  # set high frequency cutoff at the Nyquist frequency
-nbands = 33   # 33 gives about 1/3 octave bands from 10hz to 22khz
+nbands = 256   # 33 gives about 1/3 octave bands from 10hz to 22khz
 Nfft = 1024
 doLogs = False
 # Choose "Hamming"  "Blackman"
@@ -197,10 +198,10 @@ while not doneWithWav:
     try:
         if startSecs % 10 == 0:
             print("Processing wav", thisWav, " at ", startSecs, "secs")
-        psd, secsInWav = calculatePSD(wavDir + thisWav,  startSecs, deltaT*samplerate, flow, fhigh, nbands, Nfft, doLogs)
-        input("Hit Enter to continue forward in time")
+        psd, secsInWavFile = calculatePSD(wavDir + thisWav,  startSecs, deltaT*samplerate, flow, fhigh, nbands, Nfft, doLogs)
+        input("Time was {} sec. Hit Enter to continue forward in time".format(startSecs))
         startSecs += deltaT
-        if startSecs >= secsInWav - deltaT:
+        if startSecs >= secsInWavFile - deltaT:
             doneWithWav = True
     except Exception as e:
         print("got error in calculatePSD", e)
