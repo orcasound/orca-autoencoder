@@ -174,7 +174,6 @@ def calculatePSD(wavFile, startSecs, Nsamples, flow, fhigh, nbands, Nfft, doLogs
 
 ################################################################  RUN STARTS HERE
 
-wavDir = "/home/val/PycharmProjects/orca-autoencoder/psd_calc/"
 wavDir = ""
 thisWav = "someCalls.wav"
 
