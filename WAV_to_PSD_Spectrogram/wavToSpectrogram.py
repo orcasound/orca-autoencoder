@@ -232,7 +232,7 @@ fftWindow = "Hamming"
 Nfft = 1024
 
 wavDir = ""
-thisWav = "someCallsPlus7db.wav"
+thisWav = "210825-1925_L-highlight.wav"
 
 DEBUG = 0
 
